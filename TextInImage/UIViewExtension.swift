@@ -20,7 +20,7 @@ extension UIView {
         }
         
         guard let completion = completion else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: {
             completion()
         })
     }
@@ -77,7 +77,7 @@ extension UIView {
             hud.detailsLabel.textColor = .white
         }
         hud.removeFromSuperViewOnHide = true
-        hud.hide(animated: true, afterDelay: 2)
+        hud.hide(animated: true, afterDelay: 1.5)
     }
     
     //显示带进度值的进度条

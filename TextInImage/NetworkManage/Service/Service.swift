@@ -37,6 +37,23 @@ struct Service {
         }
     }
     
+    @discardableResult
+    public static func getbaidubce<T: HandyJSON>(_ url: String,
+                                         parameters: [String : Any]? = nil,
+                                         model: T.Type,
+                                         completion: ((_ returnData: T?) -> Void)?) -> Cancellable {
+        let network = Networking<RequestApi>()
+        
+        return network.request(.getbaidubce(url, parameters: parameters),
+                               callbackQueue: DispatchQueue.main) { (result) in
+            guard let completion = completion else { return }
+            guard let returnData = try? result.value?.mapModel(T.self) else {
+                completion(nil)
+                return
+            }
+            completion(returnData)
+        }
+    }
     /// post请求
     /// - Parameters:
     ///   - url: <#url description#>
@@ -63,6 +80,24 @@ struct Service {
         }
     }
     
+    @discardableResult
+    public static func postbaidubce<T: HandyJSON>(_ url: String,
+                                         parameters: [String : Any]? = nil,
+                                         model: T.Type,
+                                         completion: ((_ returnData: T?) -> Void)?) -> Cancellable {
+        
+        let network = Networking<RequestApi>()
+        
+        return network.request(.postbaidubce(url, parameters: parameters),
+                               callbackQueue: DispatchQueue.main) { (result) in
+            guard let completion = completion else { return }
+            guard let returnData = try? result.value?.mapModel(T.self) else {
+                completion(nil)
+                return
+            }
+            completion(returnData)
+        }
+    }
     
     /// post请求
     /// - Parameters:

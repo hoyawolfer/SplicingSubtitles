@@ -18,18 +18,33 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
     @IBOutlet weak var tanslateBtn: UIButton!
     @IBOutlet weak var textView: UITextView!
     @IBOutlet weak var chooseBtn: UIButton!
+    @IBOutlet weak var ocrBtn: UIButton!
     // - 相机
     @IBOutlet weak var bgView: UIView!
     @IBOutlet weak var waterMarkTF: UITextField!
     private var cameraPickerCtrl = UIImagePickerController()
+    
+    @IBOutlet weak var zhTitleLab: UILabel!
+    @IBOutlet weak var enTitleLab: UILabel!
+    @IBOutlet weak var marginTitLab: UILabel!
+    
+    @IBOutlet weak var zhSlider: UISlider!
+    @IBOutlet weak var enSlider: UISlider!
+    @IBOutlet weak var marginSlider: UISlider!
+    
+    //0 默认 创作底图 1 ocr 底图
+    var chooseImgType: Int = 0
+    
+    var borderView: UIView = UIView()
     
     var trans_result: [Trans_result]?
     var selectImage: UIImage?
     override func viewDidLoad() {
         super.viewDidLoad()
         self.saveBtn.setTitle("", for: .normal)
+        self.ocrBtn.setTitle("", for: .normal)
         textView.delegate = self;
-//        textView.text = "人生这道选择题无论怎么选都回有遗憾\n但人们总认为没有的录上开满鲜花\n 凡事看的太透，人间便无趣了\n 该来的总会来，该走的也都会走\n 别抗拒，别挽留\n 太注重细节的人注定不会快乐"
+        textView.text = "人生这道选择题无论怎么选都回有遗憾\n但人们总认为没有的录上开满鲜花\n 凡事看的太透，人间便无趣了\n 该来的总会来，该走的也都会走\n 别抗拒，别挽留\n 太注重细节的人注定不会快乐"
         bgView.clipsToBounds = false
         waterMarkTF.delegate = self
         waterMarkTF.text = UserDefaults.standard.string(forKey: "nickname")
@@ -40,14 +55,40 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
         textView.backgroundColor = .white
         tanslateBtn.setImage(UIImage(named: "trans"), for: .normal)
         tanslateBtn.setImage(UIImage(named: "trans_dis"), for: .disabled)
-        slider.isHidden = true
-        saveBtn.isHidden = true
+        hiddenToolView(true)
+        
+        borderView.frame = CGRect(x: 0, y: 230, width: imgWidth, height: imgWidth / 0.75)
+        borderView.layer.borderWidth = 1
+        borderView.layer.borderColor = UIColor.black.cgColor
+        self.view.addSubview(borderView)
+        self.view.sendSubviewToBack(borderView)
         // Do any additional setup after loading the view.
+        
+        let zhValue = UserDefaults.standard.float(forKey: "zhSlider")
+        let enValue = UserDefaults.standard.float(forKey: "enSlider")
+        let marginValue = UserDefaults.standard.float(forKey: "marginSlider")
+
+        zhSlider.value = zhValue == 0 ? 1 : zhValue
+        enSlider.value = enValue == 0 ? 1 : enValue
+        marginSlider.value = marginValue == 0 ? 1 : marginValue
+
     }
     
     var defaultMargin: CGFloat = 40.0
     var imgHeight: CGFloat = 0
     var imgWidth: CGFloat = UIScreen.main.bounds.width
+    
+    
+    func hiddenToolView(_ isHidden: Bool) {
+        zhTitleLab.isHidden = isHidden
+        enTitleLab.isHidden = isHidden
+        marginTitLab.isHidden = isHidden
+        zhSlider.isHidden = isHidden
+        enSlider.isHidden = isHidden
+        marginSlider.isHidden = isHidden
+        slider.isHidden = isHidden
+        saveBtn.isHidden = isHidden
+    }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         self.view.endEditing(true)
@@ -55,15 +96,36 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
     
     func textFieldDidEndEditing(_ textField: UITextField) {
         UserDefaults.standard.set(textField.text ?? "", forKey: "nickname")
-        configSubView(image: selectImage)
+        configSubView(image: selectImage, zhFontRatio: CGFloat(zhSlider.value), enFontRatio: CGFloat(enSlider.value), marginRatio: CGFloat(marginSlider.value))
+
     }
     
     func textViewDidEndEditing(_ textView: UITextView) {
         getTanslate(text: textView.text)
     }
     
+    @IBAction func ocrAction(_ sender: Any) {
+        let vc = UIImagePickerController()
+        vc.delegate = self
+        vc.modalPresentationStyle = .fullScreen
+        self.chooseImgType = 1
+        self.present(vc, animated: true, completion: nil)
+    }
     
-
+    @IBAction func zhSliderChanged(_ sender: UISlider) {
+        UserDefaults.standard.set(sender.value, forKey: "zhSlider")
+        configSubView(image: self.selectImage, zhFontRatio: CGFloat(zhSlider.value), enFontRatio: CGFloat(enSlider.value), marginRatio: CGFloat(marginSlider.value))
+    }
+    @IBAction func enSliderChanged(_ sender: UISlider) {
+        UserDefaults.standard.set(sender.value, forKey: "enSlider")
+        configSubView(image: self.selectImage, zhFontRatio: CGFloat(zhSlider.value), enFontRatio: CGFloat(enSlider.value), marginRatio: CGFloat(marginSlider.value))
+    }
+    
+    @IBAction func marginSliderChanged(_ sender: UISlider) {
+        UserDefaults.standard.set(sender.value, forKey: "marginSlider")
+        configSubView(image: self.selectImage, zhFontRatio: CGFloat(zhSlider.value), enFontRatio: CGFloat(enSlider.value), marginRatio: CGFloat(marginSlider.value))
+    }
+    
     @IBAction func translateAction(_ sender: Any) {
         getTanslate(text: textView.text)
     }
@@ -93,10 +155,28 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
                 self?.view.toast("翻译失败，请重试")
             } else {
                 self?.view.toast("翻译成功")
-                self?.configSubView(image: self?.selectImage)
+                self?.configSubView(image: self?.selectImage, zhFontRatio: CGFloat(self!.zhSlider.value), enFontRatio: CGFloat(self!.enSlider.value), marginRatio: CGFloat(self!.marginSlider.value))
+
             }
         }
         
+    }
+    
+//    {
+//        "refresh_token": "25.87871ab760b6700321ecdbe4f9812b62.315360000.2028697207.282335-61888234",
+//        "expires_in": 2592000,
+//        "session_key": "9mzdCPBrzMi2txdVfrs0xxnl+oVsCxUpWyKYjKlY2RSq7qRDrGpDz6npqLUR6nxnXDy1D+myCfmsu+ZJUg5F1f+xgNpQQg==",
+//        "access_token": "24.348395bd809d2522f014b088d4a23c76.2592000.1715929207.282335-61888234",
+//        "scope": "public brain_all_scope brain_ocr_general_basic wise_adapt lebo_resource_base lightservice_public hetu_basic lightcms_map_poi kaidian_kaidian ApsMisTest_Test权限 vis-classify_flower lpq_开放 cop_helloScope ApsMis_fangdi_permission smartapp_snsapi_base smartapp_mapp_dev_manage iop_autocar oauth_tp_app smartapp_smart_game_openapi oauth_sessionkey smartapp_swanid_verify smartapp_opensource_openapi smartapp_opensource_recapi fake_face_detect_开放Scope vis-ocr_虚拟人物助理 idl-video_虚拟人物助理 smartapp_component smartapp_search_plugin avatar_video_test b2b_tp_openapi b2b_tp_openapi_online smartapp_gov_aladin_to_xcx",
+//        "session_secret": "67eb49b087fa775b1f66319e6ee38afc"
+//    }
+    
+    func ocrTextInImage(image: UIImage) {
+        let str = image.toStr()
+
+        Service.postbaidubce("/rest/2.0/ocr/v1/general_basic", parameters: ["image": str, "postUrlParameter": "1", "detect_direction": "false", "detect_language": "false", "paragraph": "false", "probability": "false"], model: WordsModel.self) { returnData in
+            print(returnData?.words_result_num ?? 0)
+        }
     }
     
     //保存图片
@@ -118,14 +198,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
     @IBAction func chooseAction(_ sender: UIButton) {
         let vc = UIImagePickerController()
         vc.delegate = self
-//        let vc = TZImagePickerController(maxImagesCount: 1, delegate: self)
-//        vc?.showSelectBtn = false
-////        vc?.allowCrop = true
-////        vc?.scaleAspectFillCrop = true
-//        vc?.allowPickingImage = true
-//        vc?.allowPickingVideo = false
-//        vc?.sortAscendingByModificationDate = true
         vc.modalPresentationStyle = .fullScreen
+        self.chooseImgType = 0
         self.present(vc, animated: true, completion: nil)
         
     }
@@ -147,15 +221,19 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true) {[weak self] in
             guard let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else { return }
-            self?.configSubView(image: image)
+            if self?.chooseImgType == 0 {
+                self?.configSubView(image: image, zhFontRatio: CGFloat(self!.zhSlider.value), enFontRatio: CGFloat(self!.enSlider.value), marginRatio: CGFloat(self!.marginSlider.value))
+            } else {
+                self?.ocrTextInImage(image: image)
+            }
+            
         }
         
     }
     
-    func configSubView(image: UIImage?) {
+    func configSubView(image: UIImage?, zhFontRatio: CGFloat = 1, enFontRatio: CGFloat = 1, marginRatio: CGFloat = 1) {
         guard let image = image else { return }
-        slider.isHidden = false
-        saveBtn.isHidden = false
+        hiddenToolView(false)
         self.selectImage = image
         for view in bgView.subviews {
             view.removeFromSuperview()
@@ -169,10 +247,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
             imgView.tag = index
             imgView.contentMode = .scaleAspectFill
             if index < (trans_result?.count ?? 0) {
-                let img = image.drawTextInImage(text: text, enText: trans_result?[index].dst, waterMark: waterMarkTF.text)
+                let img = image.drawTextInImage(text: text, enText: trans_result?[index].dst, waterMark: waterMarkTF.text, zhFontRatio: zhFontRatio, enFontRatio: enFontRatio, marginRatio: marginRatio)
                 imgView.image = img
             } else {
-                let img = image.drawTextInImage(text: text, enText: nil, waterMark: waterMarkTF.text)
+                let img = image.drawTextInImage(text: text, enText: nil, waterMark: waterMarkTF.text, zhFontRatio: zhFontRatio, enFontRatio: enFontRatio, marginRatio: marginRatio)
                 imgView.image = img
             }
             
@@ -201,32 +279,37 @@ extension UIView{
     
 }
 extension UIImage {
-    func drawTextInImage(text: String, enText: String?, waterMark: String?)->UIImage {
+    func drawTextInImage(text: String, enText: String?, waterMark: String?, zhFontRatio: CGFloat = 1, enFontRatio: CGFloat = 1, marginRatio: CGFloat = 1)->UIImage {
         //开启图片上下文
         UIGraphicsBeginImageContext(self.size)
         //图形重绘
         self.draw(in: CGRect.init(x: 0, y: 0, width: self.size.width, height: self.size.height))
-        //水印文字属性
-        let fontSize: CGFloat = self.size.width / 22.0
+        let fontSize: CGFloat = self.size.width / 30 * zhFontRatio
         let att = [NSAttributedString.Key.foregroundColor:UIColor.white,NSAttributedString.Key.font:UIFont.boldSystemFont(ofSize: fontSize)]
         //水印文字大小
         let size = text.size(withAttributes: att)
-        //绘制文字
-        text.draw(in: CGRect.init(x: self.size.width / 2.0 - size.width / 2.0 - 10, y: self.size.height - size.height * 2, width: size.width, height: size.height), withAttributes: att)
+        let margin: CGFloat = (self.size.width / 30) * (marginRatio - 1)
+        let bottomMargin: CGFloat = (self.size.width / 50)
         
         if let enText = enText {
-            //水印文字属性
-            let enFontSize: CGFloat = self.size.width / 40
+            //英文文字属性
+            let enFontSize: CGFloat = self.size.width / 40 * enFontRatio
             let enAtt = [NSAttributedString.Key.foregroundColor:UIColor.white,NSAttributedString.Key.font:UIFont.boldSystemFont(ofSize: enFontSize)]
             //水印文字大小
             let enSize = enText.size(withAttributes: enAtt)
             if (size.width >= self.size.width) {
                 //绘制文字
-                enText.draw(in: CGRect.init(x: enSize.width, y: self.size.height - enSize.height * 1.5, width: self.size.width - 2 * enSize.width, height: enSize.height), withAttributes: enAtt)
+                enText.draw(in: CGRect.init(x: enSize.width, y: self.size.height - bottomMargin - enSize.height, width: self.size.width - 2 * enSize.width, height: enSize.height), withAttributes: enAtt)
             } else {
                 //绘制文字
-                enText.draw(in: CGRect.init(x: self.size.width / 2.0 - enSize.width / 2.0 - 10, y: self.size.height - enSize.height * 2, width: enSize.width, height: enSize.height), withAttributes: enAtt)
+                enText.draw(in: CGRect.init(x: self.size.width / 2.0 - enSize.width / 2.0 - 10, y: self.size.height - bottomMargin - enSize.height, width: enSize.width, height: enSize.height), withAttributes: enAtt)
             }
+            //绘制文字
+            text.draw(in: CGRect.init(x: self.size.width / 2.0 - size.width / 2.0 - 10, y: self.size.height - enSize.height - size.height - bottomMargin * 1.3 - margin, width: size.width, height: size.height), withAttributes: att)
+
+        } else {
+            //绘制文字
+            text.draw(in: CGRect.init(x: self.size.width / 2.0 - size.width / 2.0 - 10, y: self.size.height - size.height - bottomMargin - margin, width: size.width, height: size.height), withAttributes: att)
         }
         
         if let waterMark = waterMark {
@@ -266,6 +349,15 @@ extension UIImage {
         return image!
         
     }
+    
+    func toStr() -> String{
+        let dataTmp = self.pngData()
+        if let data = dataTmp {
+            let imageStrTT = data.base64EncodedString()
+            return imageStrTT
+        }
+        return ""
+    }
 }
 
 extension String {
@@ -303,10 +395,21 @@ extension String {
     }
 }
 
+
 struct Model: HandyJSON {
     var from: String?
     var to: String?
     var trans_result: [Trans_result]?
+}
+
+
+struct WordsModel: HandyJSON {
+    var words_result_num: Int?
+    var words_result: [WordModel]?
+}
+
+struct WordModel: HandyJSON {
+    var words: String?
 }
 
 struct Trans_result: HandyJSON {

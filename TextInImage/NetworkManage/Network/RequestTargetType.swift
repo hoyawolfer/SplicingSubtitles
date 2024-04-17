@@ -54,9 +54,12 @@ extension RequestTargetType {
         default:
             encoding = URLEncoding.default
         }
-        if let requestParameters = parameters {
+        if var requestParameters = parameters {
             if let _ = requestParameters["jsonArray"] {
                 return .requestParameters(parameters: requestParameters, encoding: JSONArrayEncoding.default)
+            } else if let _ = requestParameters["postUrlParameter"] {
+                requestParameters.removeValue(forKey: "postUrlParameter")
+                return .requestCompositeParameters(bodyParameters: requestParameters, bodyEncoding: JSONEncoding.default, urlParameters: ["access_token": "24.348395bd809d2522f014b088d4a23c76.2592000.1715929207.282335-61888234"])
             } else {
                 return .requestParameters(parameters: requestParameters, encoding: encoding)
             }

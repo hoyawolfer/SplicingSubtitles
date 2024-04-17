@@ -12,13 +12,15 @@ import Moya
 enum RequestApi {
     case get(String, parameters: [String: Any]?)
     case post(String, parameters: [String: Any]?)
+    case getbaidubce(String, parameters: [String: Any]?)
+    case postbaidubce(String, parameters: [String: Any]?)
     case reportPost(String, parameters: [String: Any]?)
     case signGet(String, parameters: [String: Any]?)
 }
 
 extension RequestApi: RequestTargetType {
     var headers: [String : String]? {
-        return setupHeaders(["Content-Type":"application/json"])
+        return setupHeaders(["Content-Type":"application/x-www-form-urlencoded"])
     }
     
     
@@ -28,26 +30,28 @@ extension RequestApi: RequestTargetType {
         case .reportPost(_, _):
             return setupBaseUrl("")
         case .signGet(_, _):
-            return setupBaseUrl("http://api.fanyi.baidu.com")
+            return setupBaseUrl("https://api.fanyi.baidu.com")
+        case .getbaidubce(_, _), .postbaidubce(_, _):
+            return setupBaseUrl("https://aip.baidubce.com")
         default:
-            return setupBaseUrl("http://api.fanyi.baidu.com")
+            return setupBaseUrl("https://api.fanyi.baidu.com")
         }
     }
     
     var path: String {
         switch self {
-        case .get(let url, _), .signGet(let url, _):
+        case .get(let url, _), .signGet(let url, _), .getbaidubce(let url, _):
             return setupPath(url)
-        case .post(let url, _), .reportPost(let url, _):
+        case .post(let url, _), .reportPost(let url, _), .postbaidubce(let url, _):
             return setupPath(url)
         }
     }
         
     var method: NetHTTPMethod {
         switch self {
-        case .get(_ , _), .signGet(_ , _):
+        case .get(_ , _), .signGet(_ , _), .getbaidubce(_, _):
             return setupMethod(.get)
-        case .post(_ , _), .reportPost(_ , _):
+        case .post(_ , _), .reportPost(_ , _), .postbaidubce(_, _):
             return setupMethod(.post)
         }
     }
@@ -55,14 +59,14 @@ extension RequestApi: RequestTargetType {
     var parameters: [String: Any]? {
         var params: [String: Any]?
         switch self {
-        case .get(_, let parameters), .signGet(_, let parameters):
+        case .get(_, let parameters), .signGet(_, let parameters), .getbaidubce(_, let parameters):
             params = parameters?.filter({ (key, value) in
                 if let val = value as? String, val == "" {
                     return false
                 }
                 return true
             })
-        case .post(_, let parameters), .reportPost(_, let parameters):
+        case .post(_, let parameters), .reportPost(_, let parameters), .postbaidubce(_, let parameters):
             params = parameters
         }
         return setupParameters(params)

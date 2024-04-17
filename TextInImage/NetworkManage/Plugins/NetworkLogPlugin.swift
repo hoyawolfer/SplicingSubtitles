@@ -47,7 +47,7 @@ final class NetworkLoggerPlugin: PluginType {
             } else {
                 if let requestBody = request.httpBody {
                     let decrypt = requestBody.parameterString()
-                    print("请求参数 : \(decrypt)")
+//                    print("请求参数 : \(decrypt)")
                 }
             }
         }
