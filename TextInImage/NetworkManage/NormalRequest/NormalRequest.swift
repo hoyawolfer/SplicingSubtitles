@@ -14,7 +14,7 @@ class NormalRequest: NSObject {
     let timestamp = String(Date().timeIntervalSince1970)
     
     private func setupHeadrs() -> HTTPHeaders? {
-        return ["application/json": "Content-Type"]
+        return ["application/x-www-form-urlencoded": "Content-Type"]
     }
     
     
