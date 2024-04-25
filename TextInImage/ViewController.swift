@@ -10,6 +10,7 @@ import Photos
 import AssetsLibrary
 import CommonCrypto
 import HandyJSON
+import Vision
 
 class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavigationControllerDelegate, UITextViewDelegate, UITextFieldDelegate {
 
@@ -19,6 +20,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
     @IBOutlet weak var textView: UITextView!
     @IBOutlet weak var chooseBtn: UIButton!
     @IBOutlet weak var ocrBtn: UIButton!
+    @IBOutlet weak var clearBtn: UIButton!
     // - 相机
     @IBOutlet weak var bgView: UIView!
     @IBOutlet weak var waterMarkTF: UITextField!
@@ -43,8 +45,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
         super.viewDidLoad()
         self.saveBtn.setTitle("", for: .normal)
         self.ocrBtn.setTitle("", for: .normal)
+        self.clearBtn.setTitle("", for: .normal)
         textView.delegate = self;
-        textView.text = "人生这道选择题无论怎么选都回有遗憾\n但人们总认为没有的录上开满鲜花\n 凡事看的太透，人间便无趣了\n 该来的总会来，该走的也都会走\n 别抗拒，别挽留\n 太注重细节的人注定不会快乐"
+//        textView.text = "人生这道选择题无论怎么选都回有遗憾\n但人们总认为没有的录上开满鲜花\n 凡事看的太透，人间便无趣了\n 该来的总会来，该走的也都会走\n 别抗拒，别挽留\n 太注重细节的人注定不会快乐"
         bgView.clipsToBounds = false
         waterMarkTF.delegate = self
         waterMarkTF.text = UserDefaults.standard.string(forKey: "nickname")
@@ -90,6 +93,70 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
         saveBtn.isHidden = isHidden
     }
     
+    @IBAction func clearAction(_ sender: Any) {
+        textView.text = ""
+    }
+    func recognizeTextRequest(image: UIImage) {
+        // 初始化 VNImageRequestHandler
+        var cgOrientation = CGImagePropertyOrientation.right
+        switch image.imageOrientation {
+            case .up: cgOrientation = .up
+            case .upMirrored: cgOrientation = .upMirrored
+            case .down: cgOrientation = .down
+            case .downMirrored: cgOrientation = .downMirrored
+            case .left: cgOrientation = .left
+            case .leftMirrored: cgOrientation = .leftMirrored
+            case .right: cgOrientation = .right
+            case .rightMirrored: cgOrientation = .rightMirrored
+        @unknown default:
+            fatalError()
+        }
+        
+        guard let cgImage = image.cgImage else { return }
+        
+        let requestHandler = VNImageRequestHandler(cgImage: cgImage, orientation: cgOrientation)
+        // 初始化 VNRecognizeTextRequest
+        let request = VNRecognizeTextRequest(completionHandler: recognizeTextHandler)
+        
+        // 默认情况下不会识别中文，需要手动指定 recognitionLanguages
+        request.recognitionLanguages = ["zh-Hans", "zh-Hant"]
+        request.usesLanguageCorrection = true
+        // 执行 request
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                try requestHandler.perform([request])
+            } catch {
+                print("Unable to perform the requests: \(error).")
+            }
+        }
+    }
+
+    func recognizeTextHandler(request: VNRequest, error: Error?) {
+            guard let observations = request.results as? [VNRecognizedTextObservation] else {
+                return
+            }
+            DispatchQueue.main.async {
+                let recognizedStrings = observations.compactMap { observation in
+                    return observation.topCandidates(1).first?.string
+                }
+                self.textView.text = self.removeEnglishCharacters(from: recognizedStrings.joined(separator: "\n"))
+//                print(recognizedStrings)
+            }
+    }
+    
+    func removeEnglishCharacters(from input: String) -> String {
+        do {
+            let regex = try NSRegularExpression(pattern: "[A-Za-z]", options: [])
+            let range = NSRange(location: 0, length: input.utf16.count)
+            let noEnglishString = regex.stringByReplacingMatches(in: input, options: [], range: range, withTemplate: "")
+            return noEnglishString.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "\n\n", with: "\n")
+        } catch {
+            // 如果正则表达式有错误，返回原始字符串
+            print("正则表达式错误: \(error)")
+            return input
+        }
+    }
+
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         self.view.endEditing(true)
     }
@@ -97,11 +164,14 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
     func textFieldDidEndEditing(_ textField: UITextField) {
         UserDefaults.standard.set(textField.text ?? "", forKey: "nickname")
         configSubView(image: selectImage, zhFontRatio: CGFloat(zhSlider.value), enFontRatio: CGFloat(enSlider.value), marginRatio: CGFloat(marginSlider.value))
+        
 
     }
     
     func textViewDidEndEditing(_ textView: UITextView) {
-        getTanslate(text: textView.text)
+//        getTanslate(text: textView.text)
+        configSubView(image: selectImage, zhFontRatio: CGFloat(zhSlider.value), enFontRatio: CGFloat(enSlider.value), marginRatio: CGFloat(marginSlider.value))
+
     }
     
     @IBAction func ocrAction(_ sender: Any) {
@@ -172,11 +242,13 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
 //    }
     
     func ocrTextInImage(image: UIImage) {
-        let str = image.toStr()
-
-        Service.postbaidubce("/rest/2.0/ocr/v1/general_basic", parameters: ["image": str, "postUrlParameter": "1", "detect_direction": "false", "detect_language": "false", "paragraph": "false", "probability": "false"], model: WordsModel.self) { returnData in
-            print(returnData?.words_result_num ?? 0)
-        }
+        recognizeTextRequest(image: image)
+//        textView.text = ""
+//        let str = image.toStr()
+//
+//        Service.postbaidubce("/rest/2.0/ocr/v1/general_basic", parameters: ["image": str, "postUrlParameter": "1", "detect_direction": "false", "detect_language": "false", "paragraph": "false", "probability": "false"], model: WordsModel.self) { returnData in
+//            print(returnData?.words_result_num ?? 0)
+//        }
     }
     
     //保存图片
@@ -358,6 +430,7 @@ extension UIImage {
         }
         return ""
     }
+    
 }
 
 extension String {

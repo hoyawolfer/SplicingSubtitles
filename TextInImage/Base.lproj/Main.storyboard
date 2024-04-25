@@ -166,6 +166,22 @@
                                     <action selector="marginSliderChanged:" destination="BYZ-38-t0r" eventType="touchUpInside" id="hVE-Qi-LkS"/>
                                 </connections>
                             </slider>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="zS5-f0-9AQ">
+                                <rect key="frame" x="126.66666666666667" y="197" width="53.333333333333329" height="43.333333333333343"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="53.329999999999998" id="0Ad-HK-lZn"/>
+                                    <constraint firstAttribute="height" constant="43.329999999999998" id="Klp-Au-I2L"/>
+                                </constraints>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="plain" image="clear">
+                                    <backgroundConfiguration key="background">
+                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                    </backgroundConfiguration>
+                                </buttonConfiguration>
+                                <connections>
+                                    <action selector="clearAction:" destination="BYZ-38-t0r" eventType="touchUpInside" id="aoI-mJ-6a7"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -182,6 +198,7 @@
                             <constraint firstItem="Dxz-nl-pw9" firstAttribute="leading" secondItem="dJp-tZ-yEw" secondAttribute="trailing" constant="12.67" id="XjE-Dd-E9T"/>
                             <constraint firstItem="7T5-1v-cHi" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="XoW-wq-4db"/>
                             <constraint firstItem="dJp-tZ-yEw" firstAttribute="centerY" secondItem="Dxz-nl-pw9" secondAttribute="centerY" id="Xpe-u2-rUG"/>
+                            <constraint firstItem="qYO-qL-hxa" firstAttribute="leading" secondItem="zS5-f0-9AQ" secondAttribute="trailing" constant="8" symbolic="YES" id="apy-fd-KfX"/>
                             <constraint firstItem="Mjo-d3-4Ae" firstAttribute="centerY" secondItem="ZAk-gp-W8u" secondAttribute="centerY" id="bM2-22-7qR"/>
                             <constraint firstItem="xfn-IE-U0B" firstAttribute="centerY" secondItem="Da9-Gh-crh" secondAttribute="centerY" id="dSA-nn-vWo"/>
                             <constraint firstItem="ZAk-gp-W8u" firstAttribute="top" secondItem="oMa-UR-oX3" secondAttribute="bottom" constant="24.333333333333343" id="ePs-Fh-HnP"/>
@@ -194,6 +211,7 @@
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="gdg-CC-ieW" secondAttribute="bottom" constant="17" id="lrr-jG-zeU"/>
                             <constraint firstItem="1QD-SE-awd" firstAttribute="leading" secondItem="Da9-Gh-crh" secondAttribute="leading" id="mVY-Qo-Wly"/>
                             <constraint firstItem="ZAk-gp-W8u" firstAttribute="leading" secondItem="oMa-UR-oX3" secondAttribute="leading" id="ppX-bn-Pef"/>
+                            <constraint firstItem="zS5-f0-9AQ" firstAttribute="centerY" secondItem="qYO-qL-hxa" secondAttribute="centerY" id="qDM-x0-h2B"/>
                             <constraint firstItem="oMa-UR-oX3" firstAttribute="centerY" secondItem="Dxz-nl-pw9" secondAttribute="centerY" id="s1o-xQ-SO0"/>
                             <constraint firstItem="VVI-80-yAC" firstAttribute="leading" secondItem="xfn-IE-U0B" secondAttribute="leading" id="sLJ-o2-6dY"/>
                             <constraint firstItem="oMa-UR-oX3" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="t35-G8-sXL"/>
@@ -204,6 +222,7 @@
                     <connections>
                         <outlet property="bgView" destination="rUd-Qx-lfC" id="2Rc-P0-Z1Y"/>
                         <outlet property="chooseBtn" destination="Dxz-nl-pw9" id="zN0-hW-Zb5"/>
+                        <outlet property="clearBtn" destination="zS5-f0-9AQ" id="1Rf-Vl-83R"/>
                         <outlet property="enSlider" destination="xfn-IE-U0B" id="8Wm-7g-yCY"/>
                         <outlet property="enTitleLab" destination="Da9-Gh-crh" id="U0T-g4-J9z"/>
                         <outlet property="marginSlider" destination="VVI-80-yAC" id="Msf-HE-4Z0"/>
@@ -225,6 +244,7 @@
     </scenes>
     <resources>
         <image name="choose" width="29.333333969116211" height="29.333333969116211"/>
+        <image name="clear" width="29.333333969116211" height="29.333333969116211"/>
         <image name="down" width="29.333333969116211" height="29.333333969116211"/>
         <image name="ocr" width="29.333333969116211" height="29.333333969116211"/>
         <image name="trans" width="29.333333969116211" height="29.333333969116211"/>
@@ -235,10 +255,10 @@
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="systemGray2Color">
-            <color red="0.68235294117647061" green="0.68235294117647061" blue="0.69803921568627447" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.68235294120000001" green="0.68235294120000001" blue="0.69803921570000005" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemGray4Color">
-            <color red="0.81960784313725488" green="0.81960784313725488" blue="0.83921568627450982" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.81960784310000001" green="0.81960784310000001" blue="0.83921568629999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="tertiarySystemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
